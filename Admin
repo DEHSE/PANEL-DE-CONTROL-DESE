@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEHSE — Panel de administración</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{
+    --red:#FF0008;
+    --red-deep:#B5000A;
+    --red-soft:#FFE6E5;
+    --ink:#181614;
+    --ink-soft:#2A2724;
+    --paper:#FFFDFB;
+    --paper-warm:#FAF6F1;
+    --gray:#6B6660;
+    --gray-light:#9A958D;
+    --line:#EAE4DB;
+    --ok:#1E8E5A;
+    --ok-soft:#E3F5EC;
+    --radius:14px;
+    --radius-sm:10px;
+    --shadow:0 10px 30px rgba(24,22,20,0.10);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper-warm);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  input, button, textarea, select{ font-family:inherit; }
+
+  /* ============ LOGIN ============ */
+  .login-screen{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(circle at 15% 10%, var(--red-soft) 0%, transparent 45%),
+      var(--paper-warm);
+  }
+  .login-card{
+    width:100%; max-width:380px;
+    background:var(--paper);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:36px 32px;
+    border:1px solid var(--line);
+  }
+  .login-brand{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
+  .login-brand .dot{
+    width:10px;height:10px;border-radius:50%;background:var(--red);
+  }
+  .login-brand span{
+    font-weight:800; letter-spacing:0.02em; font-size:15px; color:var(--ink);
+  }
+  .login-card h1{
+    font-size:22px; margin:14px 0 4px; letter-spacing:-0.01em;
+  }
+  .login-card p.sub{
+    margin:0 0 26px; color:var(--gray); font-size:14px; line-height:1.5;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft);
+    margin-bottom:6px; letter-spacing:0.01em;
+  }
+  .field input{
+    width:100%; padding:12px 14px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--line); background:var(--paper);
+    font-size:14.5px; color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus{
+    outline:none; border-color:var(--red);
+    box-shadow:0 0 0 3px var(--red-soft);
+  }
+  .btn{
+    width:100%; padding:13px 16px; border:none; border-radius:999px;
+    background:var(--ink); color:#fff; font-weight:700; font-size:14.5px;
+    cursor:pointer; transition:transform .15s ease, background .15s ease;
+  }
+  .btn:hover{ background:var(--ink-soft); }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{ background:var(--red); }
+  .btn-primary:hover{ background:var(--red-deep); }
+  .btn:disabled{ opacity:0.6; cursor:not-allowed; transform:none; }
+  .btn-ghost{
+    background:transparent; color:var(--ink-soft); border:1.5px solid var(--line);
+  }
+  .btn-ghost:hover{ background:var(--paper-warm); }
+
+  .form-error{
+    display:none; margin-top:14px; padding:11px 14px; border-radius:var(--radius-sm);
+    background:var(--red-soft); color:var(--red-deep); font-size:13.5px; font-weight:600;
+    line-height:1.4;
+  }
+  .form-error.show{ display:block; }
+
+  .spinner{
+    width:16px; height:16px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
+    display:inline-block; vertical-align:middle; margin-right:8px;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ============ SHELL (post-login) ============ */
+  .app-shell{ display:none; min-height:100vh; }
+  .app-shell.show{ display:block; }
+
+  .topbar{
+    position:sticky; top:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px; background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-brand{ display:flex; align-items:center; gap:10px; }
+  .topbar-brand .dot{ width:9px;height:9px;border-radius:50%;background:var(--red); }
+  .topbar-brand span{ font-weight:800; font-size:15px; letter-spacing:0.01em; }
+  .topbar-brand small{
+    display:block; font-weight:600; color:var(--gray); font-size:11.5px; margin-top:1px;
+  }
+  .topbar-user{ display:flex; align-items:center; gap:14px; }
+  .topbar-user .email{ font-size:13px; color:var(--gray); }
+  .btn-logout{
+    padding:9px 16px; border-radius:999px; border:1.5px solid var(--line);
+    background:transparent; color:var(--ink-soft); font-size:13px; font-weight:700;
+    cursor:pointer; transition:background .15s ease;
+  }
+  .btn-logout:hover{ background:var(--paper-warm); border-color:var(--gray-light); }
+
+  main.content{ max-width:1080px; margin:0 auto; padding:32px 24px 80px; }
+  .content-header{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:16px; margin-bottom:22px; flex-wrap:wrap;
+  }
+  .content h2{ font-size:20px; margin:0 0 4px; }
+  .content p.lead{ color:var(--gray); font-size:14px; margin:0; }
+  .btn-new{ width:auto; padding:12px 20px; white-space:nowrap; }
+
+  .list-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px; flex-wrap:wrap; gap:10px;
+  }
+  .tabs{ display:flex; gap:6px; }
+  .tab{
+    padding:8px 14px; border-radius:999px; border:1.5px solid var(--line);
+    background:var(--paper); color:var(--gray); font-size:13px; font-weight:700;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .tab:hover{ border-color:var(--gray-light); }
+  .tab.active{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .count-label{ font-size:13px; color:var(--gray); }
+
+  .placeholder-box{
+    border:1.5px dashed var(--line); border-radius:var(--radius);
+    padding:40px 24px; text-align:center; color:var(--gray); font-size:14px;
+    background:var(--paper);
+  }
+
+  .product-row{
+    display:flex; align-items:center; gap:16px;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:12px 14px; margin-bottom:10px;
+  }
+  .product-row.inactive{ opacity:0.55; }
+  .product-thumb{
+    width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0;
+    background:var(--paper-warm); display:flex; align-items:center; justify-content:center;
+  }
+  .product-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .product-thumb .no-photo{ font-size:10px; color:var(--gray-light); text-align:center; }
+  .product-info{ flex:1; min-width:0; }
+  .product-info .name{ font-weight:700; font-size:14.5px; color:var(--ink); }
+  .product-info .meta{ font-size:12.5px; color:var(--gray); margin-top:2px; }
+  .product-price{ font-size:14px; font-weight:700; color:var(--ink); white-space:nowrap; }
+  .product-price .old{
+    text-decoration:line-through; color:var(--gray-light); font-weight:500; font-size:12px;
+    margin-right:6px;
+  }
+  .badge{
+    display:inline-block; padding:3px 9px; border-radius:999px;
+    font-size:11px; font-weight:700; letter-spacing:0.02em;
+  }
+  .badge-active{ background:var(--ok-soft); color:var(--ok); }
+  .badge-inactive{ background:var(--line); color:var(--gray); }
+  .product-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .btn-sm{
+    padding:8px 13px; border-radius:999px; font-size:12.5px; font-weight:700;
+    border:1.5px solid var(--line); background:var(--paper); color:var(--ink-soft);
+    cursor:pointer; transition:all .15s ease; width:auto;
+  }
+  .btn-sm:hover{ background:var(--paper-warm); }
+  @media(max-width:640px){
+    .product-row{ flex-wrap:wrap; }
+    .product-price{ order:3; }
+    .product-actions{ order:4; margin-left:auto; }
+  }
+
+  /* ============ MODAL: FORMULARIO DE PRODUCTO (Parte 3) ============ */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(24,22,20,0.55); backdrop-filter:blur(4px);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:40px 16px; overflow-y:auto;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--paper); border-radius:var(--radius); box-shadow:var(--shadow);
+    max-width:760px; width:100%; padding:30px 28px 32px; position:relative;
+  }
+  .modal-box h2{ font-size:19px; margin:0 0 4px; }
+  .modal-box p.sub{ color:var(--gray); font-size:13.5px; margin:0 0 22px; line-height:1.5; }
+  .modal-close-x{
+    position:absolute; top:20px; right:20px; background:transparent; border:none;
+    font-size:20px; color:var(--gray); cursor:pointer; line-height:1; padding:4px;
+  }
+  .modal-close-x:hover{ color:var(--ink); }
+
+  .field select, .field textarea{
+    width:100%; padding:12px 14px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--line); background:var(--paper);
+    font-size:14.5px; color:var(--ink); resize:vertical;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-soft);
+  }
+
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; margin-bottom:6px; }
+  .form-grid .full{ grid-column:1/-1; }
+  @media(max-width:560px){ .form-grid{ grid-template-columns:1fr; } }
+
+  .field-error-inline{
+    font-size:13px; color:var(--red-deep); background:var(--red-soft);
+    padding:10px 14px; border-radius:var(--radius-sm); margin:10px 0; line-height:1.5;
+    display:none;
+  }
+  .field-error-inline.show{ display:block; }
+
+  .colors-label-row{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+  }
+  .colors-label-row label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
+  .btn-add-color{
+    width:auto; padding:9px 16px; font-size:12.5px;
+  }
+
+  .color-card{
+    border:1.5px solid var(--line); border-radius:var(--radius-sm);
+    padding:16px; margin-bottom:14px; background:var(--paper-warm);
+  }
+  .color-card-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .color-badge-portada{
+    font-size:11px; font-weight:800; color:var(--red); background:var(--red-soft);
+    padding:3px 9px; border-radius:999px; flex-shrink:0;
+  }
+  .color-order-btns{ display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
+  .color-order-btns button{
+    width:24px; height:19px; border:1px solid var(--line); background:#fff;
+    border-radius:5px; font-size:10px; cursor:pointer; line-height:1; padding:0;
+    color:var(--ink-soft);
+  }
+  .color-order-btns button:disabled{ opacity:0.3; cursor:not-allowed; }
+  .color-index-label{ font-size:12.5px; color:var(--gray); flex-shrink:0; }
+  .color-remove-btn{
+    margin-left:auto; background:transparent; border:none; color:var(--red);
+    font-weight:700; font-size:12.5px; cursor:pointer; padding:4px;
+  }
+  .color-fields{
+    display:grid; grid-template-columns:1.4fr 0.7fr 0.7fr; gap:10px; margin-bottom:12px;
+  }
+  @media(max-width:520px){ .color-fields{ grid-template-columns:1fr; } }
+  .color-fields .field{ margin-bottom:0; }
+  .color-fields label{
+    display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .color-fields input[type="text"], .color-fields input[type="number"]{
+    width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:14px; background:#fff;
+  }
+  .color-hex-input{
+    width:100%; height:40px; border-radius:10px; border:1.5px solid var(--line);
+    padding:2px; cursor:pointer; background:#fff;
+  }
+
+  .photos-drop{
+    display:block; border:1.5px dashed var(--line-strong, var(--line)); border-radius:10px;
+    padding:14px; text-align:center; font-size:12.5px; color:var(--gray);
+    cursor:pointer; background:#fff; transition:border-color .15s ease, background .15s ease;
+  }
+  .photos-drop:hover{ border-color:var(--red); background:var(--red-soft); }
+
+  .photos-preview-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .photo-thumb{
+    position:relative; width:64px; height:64px; border-radius:8px; overflow:hidden;
+    border:1px solid var(--line); flex-shrink:0;
+  }
+  .photo-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .photo-thumb .photo-remove{
+    position:absolute; top:2px; right:2px; background:rgba(24,22,20,0.75); color:#fff;
+    border:none; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:1;
+    cursor:pointer; padding:0;
+  }
+  .photo-thumb .photo-order{
+    position:absolute; bottom:2px; left:2px; display:flex; gap:2px;
+  }
+  .photo-thumb .photo-order button{
+    width:17px; height:17px; font-size:9px; border:none; background:rgba(255,255,255,0.9);
+    border-radius:3px; cursor:pointer; line-height:1; padding:0;
+  }
+  .photo-thumb .photo-order button:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .modal-footer{
+    display:flex; gap:10px; justify-content:flex-end; margin-top:22px;
+    border-top:1px solid var(--line); padding-top:18px;
+  }
+  .modal-footer .btn{ width:auto; padding:12px 22px; }
+</style>
+</head>
+<body>
+
+<!-- ============================= PANTALLA DE LOGIN ============================= -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand"><span class="dot"></span><span>DEHSE</span></div>
+    <h1>Panel de administración</h1>
+    <p class="sub">Inicia sesión para agregar y editar productos del catálogo.</p>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Correo</label>
+        <input type="email" id="loginEmail" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Iniciar sesión</button>
+      <div class="form-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= PANEL (post-login) ============================= -->
+<div class="app-shell" id="appShell">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="dot"></span><span>DEHSE</span>
+      </div>
+    </div>
+    <div class="topbar-user">
+      <span class="email" id="userEmailLabel"></span>
+      <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <main class="content">
+    <div class="content-header">
+      <div>
+        <h2>Productos</h2>
+        <p class="lead">Acá vas a poder ver, crear y editar los modelos del catálogo.</p>
+      </div>
+      <button class="btn btn-primary btn-new" id="btnNuevoProducto">+ Nuevo producto</button>
+    </div>
+
+    <div class="list-toolbar">
+      <div class="tabs" id="statusTabs">
+        <button class="tab active" data-filter="todos">Todos</button>
+        <button class="tab" data-filter="activos">Activos</button>
+        <button class="tab" data-filter="inactivos">Inactivos</button>
+      </div>
+      <span class="count-label" id="countLabel"></span>
+    </div>
+
+    <div id="productsListWrap">
+      <div class="placeholder-box" id="productsPlaceholder">Cargando productos…</div>
+    </div>
+  </main>
+</div>
+
+<!-- ============================= MODAL: NUEVO PRODUCTO (Parte 3) ============================= -->
+<div class="modal-overlay" id="productModalOverlay">
+  <div class="modal-box">
+    <button type="button" class="modal-close-x" id="productModalClose" aria-label="Cerrar">✕</button>
+    <h2 id="productModalTitle">Nuevo producto</h2>
+    <p class="sub" id="productModalSub">Completa los datos generales, agrega al menos un color con una foto, y guarda.</p>
+
+    <form id="productForm">
+      <div class="form-grid">
+        <div class="field full" id="pfIdWrap" style="display:none;">
+          <label for="pfId">ID del producto (no editable — otras tablas dependen de él)</label>
+          <input type="text" id="pfId" disabled style="background:var(--line);color:var(--gray);cursor:not-allowed;">
+        </div>
+        <div class="field">
+          <label for="pfCategoria">Categoría</label>
+          <select id="pfCategoria"></select>
+        </div>
+        <div class="field" id="pfCategoriaNuevaWrap" style="display:none;">
+          <label for="pfCategoriaNueva">Nombre de la categoría nueva</label>
+          <input type="text" id="pfCategoriaNueva" placeholder="Ej. Cartera">
+        </div>
+        <div class="field">
+          <label for="pfNombre">Nombre del modelo</label>
+          <input type="text" id="pfNombre" required>
+        </div>
+        <div class="field">
+          <label for="pfGenero">Género</label>
+          <select id="pfGenero">
+            <option value="">(sin especificar)</option>
+            <option value="Mujer">Mujer</option>
+            <option value="Hombre">Hombre</option>
+            <option value="Unisex">Unisex</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pfPrecio">Precio normal (S/)</label>
+          <input type="number" id="pfPrecio" min="0" step="0.01" required>
+        </div>
+        <div class="field">
+          <label for="pfPrecioMayor">Precio por mayor (S/) — opcional</label>
+          <input type="number" id="pfPrecioMayor" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label for="pfDescuento">Descuento % — opcional</label>
+          <input type="number" id="pfDescuento" min="1" max="99" step="1">
+        </div>
+        <div class="field full">
+          <label for="pfDescripcion">Descripción</label>
+          <textarea id="pfDescripcion" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="field-error-inline" id="pfGeneralError"></div>
+
+      <div style="margin-top:6px;">
+        <div class="colors-label-row">
+          <label>Colores</label>
+          <button type="button" class="btn btn-ghost btn-add-color" id="btnAgregarColor">+ Agregar color</button>
+        </div>
+        <div id="coloresWrap"></div>
+        <div class="field-error-inline" id="pfColoresError"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btnCancelarProducto">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="btnGuardarProducto">Guardar producto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   CONFIGURACIÓN
+   ============================================================= */
+const CONFIG = {
+  supabaseUrl: "https://kavzozilqaqyykfzwrch.supabase.co",
+  supabaseAnonKey: "sb_publishable_CI0sPs1OwWRtOHBr0i9yCg_kOW_yX9g"
+};
+
+const SESSION_KEY = "dehse_admin_session";
+
+/* =============================================================
+   SESIÓN — guardamos el token de Supabase Auth en localStorage
+   para no pedir login cada vez que se recarga la página.
+   Se refresca automáticamente cuando está por vencer.
+   ============================================================= */
+function guardarSesion(sesion) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sesion));
+}
+function leerSesion() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) { return null; }
+}
+function borrarSesion() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+/* Pide un access_token nuevo usando el refresh_token guardado */
+async function refrescarSesion(sesion) {
+  const res = await fetch(`${CONFIG.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: CONFIG.supabaseAnonKey },
+    body: JSON.stringify({ refresh_token: sesion.refresh_token })
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const nuevaSesion = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + (data.expires_in * 1000),
+    email: sesion.email
+  };
+  guardarSesion(nuevaSesion);
+  return nuevaSesion;
+}
+
+/* Devuelve una sesión válida (refrescándola si ya venció), o null si hay que loguearse */
+async function obtenerSesionValida() {
+  let sesion = leerSesion();
+  if (!sesion) return null;
+  // Si vence en menos de 60s (o ya venció), la refrescamos antes de usarla
+  if (Date.now() > sesion.expires_at - 60000) {
+    sesion = await refrescarSesion(sesion);
+  }
+  return sesion;
+}
+
+/* =============================================================
+   FETCH autenticado a la API de Supabase (usa el access_token
+   de la sesión en vez de solo la anon key, para que las políticas
+   RLS de "escritura autenticada" acepten la petición).
+   ============================================================= */
+async function supabaseFetchAuth(path, options = {}) {
+  const sesion = await obtenerSesionValida();
+  if (!sesion) { mostrarLogin(); throw new Error("Sesión vencida, vuelve a iniciar sesión."); }
+
+  const res = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: `Bearer ${sesion.access_token}`,
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const texto = await res.text();
+    throw new Error(`HTTP ${res.status}: ${texto}`);
+  }
+  const texto = await res.text();
+  return texto ? JSON.parse(texto) : null;
+}
+
+/* =============================================================
+   LOGIN / LOGOUT
+   ============================================================= */
+function mostrarLogin() {
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("appShell").classList.remove("show");
+}
+function mostrarPanel(email) {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appShell").classList.add("show");
+  document.getElementById("userEmailLabel").textContent = email || "";
+}
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const btn = document.getElementById("loginSubmitBtn");
+  const errBox = document.getElementById("loginError");
+
+  errBox.classList.remove("show");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Ingresando…`;
+
+  try {
+    const res = await fetch(`${CONFIG.supabaseUrl}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: CONFIG.supabaseAnonKey },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.error_description || data.msg || "Correo o contraseña incorrectos."
+      );
+    }
+
+    guardarSesion({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + (data.expires_in * 1000),
+      email: data.user && data.user.email ? data.user.email : email
+    });
+
+    mostrarPanel(email);
+    iniciarPanel();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Iniciar sesión";
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  borrarSesion();
+  mostrarLogin();
+});
+
+/* =============================================================
+   LISTA DE PRODUCTOS
+   ============================================================= */
+let productosCache = [];
+let filtroEstado = "todos"; // "todos" | "activos" | "inactivos"
+
+/* Trae products con su categoría y colores/fotos anidados, en UNA sola consulta
+   (usamos el "embed" de PostgREST en vez de pedir cada tabla por separado). */
+async function traerProductosConDetalle() {
+  const path =
+    "products?select=" +
+    encodeURIComponent(
+      "id,name,price,price_wholesale,discount_percent,is_active,sort_order," +
+      "categories(name)," +
+      "product_colors(id,name,sort_order,product_images(url,sort_order))"
+    ) +
+    "&order=sort_order.asc";
+  return supabaseFetchAuth(path);
+}
+
+/* De los colores de un producto, agarra el color "portada" (sort_order más bajo)
+   y de ahí su primera foto (también por sort_order). */
+function fotoPortada(producto) {
+  const colores = producto.product_colors || [];
+  if (!colores.length) return null;
+  const portada = [...colores].sort((a, b) => a.sort_order - b.sort_order)[0];
+  const fotos = portada.product_images || [];
+  if (!fotos.length) return null;
+  return [...fotos].sort((a, b) => a.sort_order - b.sort_order)[0].url;
+}
+
+function formatearPrecio(n) {
+  return "S/ " + Number(n).toFixed(2);
+}
+
+function renderProductos() {
+  const wrap = document.getElementById("productsListWrap");
+  const countLabel = document.getElementById("countLabel");
+
+  let lista = productosCache;
+  if (filtroEstado === "activos") lista = lista.filter(p => p.is_active);
+  if (filtroEstado === "inactivos") lista = lista.filter(p => !p.is_active);
+
+  countLabel.textContent = `${lista.length} de ${productosCache.length} producto(s)`;
+
+  if (!lista.length) {
+    wrap.innerHTML = `<div class="placeholder-box">No hay productos que mostrar con este filtro.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = lista.map(p => {
+    const foto = fotoPortada(p);
+    const categoria = p.categories ? p.categories.name : "—";
+    const tieneDescuento = p.discount_percent && p.discount_percent > 0;
+    const precioFinal = tieneDescuento
+      ? p.price - (p.price * p.discount_percent / 100)
+      : p.price;
+
+    return `
+      <div class="product-row${p.is_active ? "" : " inactive"}" data-id="${p.id}">
+        <div class="product-thumb">
+          ${foto ? `<img src="${foto}" alt="${p.name}">` : `<span class="no-photo">Sin foto</span>`}
+        </div>
+        <div class="product-info">
+          <div class="name">${p.name}</div>
+          <div class="meta">
+            ${categoria}
+            <span class="badge ${p.is_active ? "badge-active" : "badge-inactive"}" style="margin-left:8px;">
+              ${p.is_active ? "Activo" : "Inactivo"}
+            </span>
+          </div>
+        </div>
+        <div class="product-price">
+          ${tieneDescuento ? `<span class="old">${formatearPrecio(p.price)}</span>` : ""}
+          ${formatearPrecio(precioFinal)}
+        </div>
+        <div class="product-actions">
+          <button class="btn-sm btn-editar" data-id="${p.id}">Editar</button>
+          <button class="btn-sm btn-toggle" data-id="${p.id}" data-active="${p.is_active}">
+            ${p.is_active ? "Desactivar" : "Activar"}
+          </button>
+        </div>
+      </div>`;
+  }).join("");
+
+  wrap.querySelectorAll(".btn-toggle").forEach(btn => {
+    btn.addEventListener("click", () => alternarActivo(btn.dataset.id, btn.dataset.active === "true"));
+  });
+  wrap.querySelectorAll(".btn-editar").forEach(btn => {
+    btn.addEventListener("click", () => {
+      abrirModalEditarProducto(btn.dataset.id);
+    });
+  });
+}
+
+async function alternarActivo(id, estaActivoAhora) {
+  const fila = document.querySelector(`.product-row[data-id="${id}"]`);
+  const btn = fila ? fila.querySelector(".btn-toggle") : null;
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+
+  try {
+    await supabaseFetchAuth(`products?id=eq.${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: !estaActivoAhora })
+    });
+    const p = productosCache.find(x => x.id === id);
+    if (p) p.is_active = !estaActivoAhora;
+    renderProductos();
+  } catch (err) {
+    alert("No se pudo actualizar: " + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = estaActivoAhora ? "Desactivar" : "Activar"; }
+  }
+}
+
+document.getElementById("statusTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab");
+  if (!btn) return;
+  filtroEstado = btn.dataset.filter;
+  document.querySelectorAll("#statusTabs .tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  renderProductos();
+});
+
+/* =============================================================
+   PARTE 3 — FORMULARIO: CREAR PRODUCTO NUEVO
+   ============================================================= */
+
+/* ---- Generación del slug (id), MISMA lógica que migrar-datos.js ---- */
+function slugify(...partes) {
+  return partes
+    .join("-")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita tildes
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/* Genera un slug único consultando a Supabase, igual que hacía el
+   script de migración (pero ahí lo comparaba contra un Set en memoria
+   porque migraba todo de una vez; acá, como se crea un producto a la
+   vez, lo consultamos directo en la base para estar siempre al día). */
+async function generarSlugUnico(categoriaNombre, nombreProducto) {
+  const idBase = slugify(categoriaNombre || "sin-categoria", nombreProducto);
+  let id = idBase;
+  let sufijo = 2;
+  while (true) {
+    const existe = await supabaseFetchAuth(`products?id=eq.${encodeURIComponent(id)}&select=id`);
+    if (!existe || !existe.length) return id;
+    id = `${idBase}-${sufijo++}`;
+  }
+}
+
+/* ---- Categorías ---- */
+let categoriasCache = [];
+async function cargarCategorias() {
+  categoriasCache = await supabaseFetchAuth("categories?select=id,name&order=sort_order.asc");
+  const sel = document.getElementById("pfCategoria");
+  sel.innerHTML =
+    categoriasCache.map(c => `<option value="${c.id}">${c.name}</option>`).join("") +
+    `<option value="__nueva__">+ Nueva categoría…</option>`;
+}
+document.getElementById("pfCategoria").addEventListener("change", (e) => {
+  document.getElementById("pfCategoriaNuevaWrap").style.display =
+    e.target.value === "__nueva__" ? "block" : "none";
+});
+
+/* ---- Estado de los colores del formulario (en memoria, hasta guardar) ----
+   modoFormulario: "crear" | "editar"
+   productoIdEditando: id del producto que se está editando (null en modo crear)
+   coloresEliminados: colores EXISTENTES que el usuario quitó en modo editar
+     → [{ colorId, urls: [...fotos existentes de ese color, para borrar del bucket] }]
+   fotosEliminadas: fotos EXISTENTES sueltas que el usuario quitó (de un color que
+     sigue existiendo) → [{ imageId, url }]
+   Ambas listas se procesan recién al tocar "Guardar cambios", no al tocar "Quitar". */
+let modoFormulario = "crear";
+let productoIdEditando = null;
+let coloresForm = [];
+let coloresEliminados = [];
+let fotosEliminadas = [];
+
+function nuevoColorVacio() {
+  return { tempId: crypto.randomUUID(), colorId: null, name: "", hex: "#181614", stock: 0, fotos: [] };
+}
+
+function renderColores() {
+  const wrap = document.getElementById("coloresWrap");
+
+  if (!coloresForm.length) {
+    wrap.innerHTML = `<div class="placeholder-box" style="padding:18px;">Aún no agregaste ningún color. Toca "+ Agregar color".</div>`;
+    return;
+  }
+
+  wrap.innerHTML = coloresForm.map((color, i) => `
+    <div class="color-card">
+      <div class="color-card-head">
+        <div class="color-order-btns">
+          <button type="button" class="btn-color-up" data-tid="${color.tempId}" ${i === 0 ? "disabled" : ""} title="Subir">▲</button>
+          <button type="button" class="btn-color-down" data-tid="${color.tempId}" ${i === coloresForm.length - 1 ? "disabled" : ""} title="Bajar">▼</button>
+        </div>
+        ${i === 0 ? `<span class="color-badge-portada">Portada</span>` : ""}
+        <span class="color-index-label">Color ${i + 1}</span>
+        <button type="button" class="color-remove-btn" data-tid="${color.tempId}">Quitar color</button>
+      </div>
+      <div class="color-fields">
+        <div class="field">
+          <label>Nombre del color</label>
+          <input type="text" class="color-name-input" data-tid="${color.tempId}" value="${color.name.replace(/"/g, "&quot;")}" placeholder="Ej. Negro">
+        </div>
+        <div class="field">
+          <label>Color</label>
+          <input type="color" class="color-hex-input" data-tid="${color.tempId}" value="${color.hex}">
+        </div>
+        <div class="field">
+          <label>Stock</label>
+          <input type="number" class="color-stock-input" data-tid="${color.tempId}" value="${color.stock}" min="0" step="1">
+        </div>
+      </div>
+      <label class="photos-drop">
+        📷 Toca para elegir fotos (puedes elegir varias a la vez)
+        <input type="file" accept="image/*" multiple class="color-photos-input" data-tid="${color.tempId}" style="display:none;">
+      </label>
+      <div class="photos-preview-row">
+        ${color.fotos.map((foto, j) => `
+          <div class="photo-thumb">
+            <img src="${foto.previewUrl}" alt="">
+            <button type="button" class="photo-remove" data-tid="${color.tempId}" data-fid="${foto.tempId}" title="Quitar foto">✕</button>
+            <div class="photo-order">
+              <button type="button" class="photo-order-left" data-tid="${color.tempId}" data-fid="${foto.tempId}" ${j === 0 ? "disabled" : ""} title="Mover antes">◀</button>
+              <button type="button" class="photo-order-right" data-tid="${color.tempId}" data-fid="${foto.tempId}" ${j === color.fotos.length - 1 ? "disabled" : ""} title="Mover después">▶</button>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>
+  `).join("");
+
+  wrap.querySelectorAll(".color-name-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const c = coloresForm.find(x => x.tempId === inp.dataset.tid);
+      if (c) c.name = inp.value;
+    });
+  });
+  wrap.querySelectorAll(".color-hex-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const c = coloresForm.find(x => x.tempId === inp.dataset.tid);
+      if (c) c.hex = inp.value;
+    });
+  });
+  wrap.querySelectorAll(".color-stock-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const c = coloresForm.find(x => x.tempId === inp.dataset.tid);
+      if (c) c.stock = Number(inp.value) || 0;
+    });
+  });
+  wrap.querySelectorAll(".btn-color-up").forEach(btn => {
+    btn.addEventListener("click", () => moverColor(btn.dataset.tid, -1));
+  });
+  wrap.querySelectorAll(".btn-color-down").forEach(btn => {
+    btn.addEventListener("click", () => moverColor(btn.dataset.tid, 1));
+  });
+  wrap.querySelectorAll(".color-remove-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = coloresForm.find(x => x.tempId === btn.dataset.tid);
+      // Si el color ya existía en la base de datos, anotamos sus fotos existentes
+      // para borrarlas del bucket de Storage recién cuando se guarde el formulario
+      // (borrar la fila de product_colors ya borra en cascada sus product_images).
+      if (c && c.colorId) {
+        const urls = c.fotos.filter(f => f.isExisting).map(f => f.url);
+        coloresEliminados.push({ colorId: c.colorId, urls });
+      }
+      coloresForm = coloresForm.filter(x => x.tempId !== btn.dataset.tid);
+      renderColores();
+    });
+  });
+  wrap.querySelectorAll(".color-photos-input").forEach(inp => {
+    inp.addEventListener("change", (e) => {
+      const c = coloresForm.find(x => x.tempId === inp.dataset.tid);
+      if (!c) return;
+      Array.from(e.target.files).forEach(file => {
+        c.fotos.push({
+          tempId: crypto.randomUUID(),
+          imageId: null,
+          url: null,
+          isExisting: false,
+          file,
+          previewUrl: URL.createObjectURL(file)
+        });
+      });
+      inp.value = ""; // permite volver a elegir el mismo archivo si se quita y se agrega otra vez
+      renderColores();
+    });
+  });
+  wrap.querySelectorAll(".photo-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = coloresForm.find(x => x.tempId === btn.dataset.tid);
+      if (!c) return;
+      const foto = c.fotos.find(f => f.tempId === btn.dataset.fid);
+      if (foto && foto.isExisting) {
+        fotosEliminadas.push({ imageId: foto.imageId, url: foto.url });
+      }
+      c.fotos = c.fotos.filter(f => f.tempId !== btn.dataset.fid);
+      renderColores();
+    });
+  });
+  wrap.querySelectorAll(".photo-order-left").forEach(btn => {
+    btn.addEventListener("click", () => moverFoto(btn.dataset.tid, btn.dataset.fid, -1));
+  });
+  wrap.querySelectorAll(".photo-order-right").forEach(btn => {
+    btn.addEventListener("click", () => moverFoto(btn.dataset.tid, btn.dataset.fid, 1));
+  });
+}
+
+function moverColor(tempId, delta) {
+  const i = coloresForm.findIndex(c => c.tempId === tempId);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= coloresForm.length) return;
+  [coloresForm[i], coloresForm[j]] = [coloresForm[j], coloresForm[i]];
+  renderColores();
+}
+
+function moverFoto(tempId, fotoId, delta) {
+  const c = coloresForm.find(x => x.tempId === tempId);
+  if (!c) return;
+  const i = c.fotos.findIndex(f => f.tempId === fotoId);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= c.fotos.length) return;
+  [c.fotos[i], c.fotos[j]] = [c.fotos[j], c.fotos[i]];
+  renderColores();
+}
+
+document.getElementById("btnAgregarColor").addEventListener("click", () => {
+  coloresForm.push(nuevoColorVacio());
+  renderColores();
+});
+
+/* ---- Abrir el modal en modo CREAR ---- */
+async function abrirModalNuevoProducto() {
+  modoFormulario = "crear";
+  productoIdEditando = null;
+  coloresEliminados = [];
+  fotosEliminadas = [];
+
+  document.getElementById("productForm").reset();
+  document.getElementById("pfIdWrap").style.display = "none";
+  document.getElementById("pfCategoriaNuevaWrap").style.display = "none";
+  document.getElementById("pfGeneralError").classList.remove("show");
+  document.getElementById("pfColoresError").classList.remove("show");
+  document.getElementById("productModalTitle").textContent = "Nuevo producto";
+  document.getElementById("productModalSub").textContent =
+    "Completa los datos generales, agrega al menos un color con una foto, y guarda.";
+  coloresForm = [];
+  renderColores();
+
+  const btnGuardar = document.getElementById("btnGuardarProducto");
+  btnGuardar.disabled = false;
+  btnGuardar.textContent = "Guardar producto";
+
+  document.getElementById("productModalOverlay").classList.add("open");
+
+  try {
+    await cargarCategorias();
+  } catch (err) {
+    document.getElementById("pfGeneralError").textContent =
+      "No se pudieron cargar las categorías: " + err.message;
+    document.getElementById("pfGeneralError").classList.add("show");
+  }
+}
+
+/* ---- Abrir el modal en modo EDITAR, precargado con los datos del producto ---- */
+async function abrirModalEditarProducto(productId) {
+  modoFormulario = "editar";
+  productoIdEditando = productId;
+  coloresEliminados = [];
+  fotosEliminadas = [];
+
+  document.getElementById("productForm").reset();
+  document.getElementById("pfIdWrap").style.display = "block";
+  document.getElementById("pfCategoriaNuevaWrap").style.display = "none";
+  document.getElementById("pfGeneralError").classList.remove("show");
+  document.getElementById("pfColoresError").classList.remove("show");
+  document.getElementById("productModalTitle").textContent = "Editar producto";
+  document.getElementById("productModalSub").textContent =
+    "El ID no se puede cambiar. Edita los datos, colores y fotos que necesites, y guarda.";
+  document.getElementById("pfId").value = productId;
+  coloresForm = [];
+  renderColores();
+
+  const btnGuardar = document.getElementById("btnGuardarProducto");
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = "Cargando…";
+  document.getElementById("productModalOverlay").classList.add("open");
+
+  try {
+    await cargarCategorias();
+
+    const path =
+      `products?id=eq.${encodeURIComponent(productId)}&select=` +
+      encodeURIComponent(
+        "id,name,category_id,gender,description,price,price_wholesale,discount_percent," +
+        "product_colors(id,name,hex,stock,sort_order,product_images(id,url,sort_order))"
+      );
+    const filas = await supabaseFetchAuth(path);
+    if (!filas || !filas.length) throw new Error("No se encontró el producto (puede que ya lo hayan borrado).");
+    const p = filas[0];
+
+    document.getElementById("pfCategoria").value = String(p.category_id || "");
+    document.getElementById("pfNombre").value = p.name || "";
+    document.getElementById("pfGenero").value = p.gender || "";
+    document.getElementById("pfPrecio").value = p.price ?? "";
+    document.getElementById("pfPrecioMayor").value = p.price_wholesale ?? "";
+    document.getElementById("pfDescuento").value = p.discount_percent ?? "";
+    document.getElementById("pfDescripcion").value = p.description || "";
+
+    const coloresOrdenados = [...(p.product_colors || [])].sort((a, b) => a.sort_order - b.sort_order);
+    coloresForm = coloresOrdenados.map(c => ({
+      tempId: crypto.randomUUID(),
+      colorId: c.id,
+      name: c.name || "",
+      hex: c.hex || "#181614",
+      stock: c.stock || 0,
+      fotos: [...(c.product_images || [])]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map(img => ({
+          tempId: crypto.randomUUID(),
+          imageId: img.id,
+          url: img.url,
+          isExisting: true,
+          file: null,
+          previewUrl: img.url
+        }))
+    }));
+    renderColores();
+
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = "Guardar cambios";
+  } catch (err) {
+    document.getElementById("pfGeneralError").textContent =
+      "No se pudo cargar el producto: " + err.message;
+    document.getElementById("pfGeneralError").classList.add("show");
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = "Guardar cambios";
+  }
+}
+
+function cerrarModalProducto() {
+  document.getElementById("productModalOverlay").classList.remove("open");
+}
+document.getElementById("btnNuevoProducto").addEventListener("click", abrirModalNuevoProducto);
+document.getElementById("productModalClose").addEventListener("click", cerrarModalProducto);
+document.getElementById("btnCancelarProducto").addEventListener("click", cerrarModalProducto);
+document.getElementById("productModalOverlay").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) cerrarModalProducto();
+});
+
+/* ---- Subida de una foto al bucket de Storage ----
+   Ruta: product-images/{product_id}/{color_id}/{nombre-archivo}
+   Se sube el archivo tal cual (sin recomprimir), con el access_token
+   de la sesión en el header Authorization (no la anon key sola). */
+function sanitizarNombreArchivo(nombre) {
+  const punto = nombre.lastIndexOf(".");
+  const base = punto > -1 ? nombre.slice(0, punto) : nombre;
+  const ext = punto > -1 ? nombre.slice(punto + 1).toLowerCase() : "";
+  const baseLimpia = slugify(base) || "foto";
+  return ext ? `${baseLimpia}.${ext}` : baseLimpia;
+}
+
+async function subirFotoAStorage(productId, colorId, file, indiceParaNombre) {
+  const sesion = await obtenerSesionValida();
+  if (!sesion) throw new Error("Sesión vencida, vuelve a iniciar sesión.");
+
+  // Prefijo con timestamp para que dos fotos con el mismo nombre no se pisen
+  const nombreArchivo = `${Date.now()}-${indiceParaNombre}-${sanitizarNombreArchivo(file.name)}`;
+  const ruta = `${productId}/${colorId}/${nombreArchivo}`;
+
+  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/product-images/${ruta}`, {
+    method: "POST",
+    headers: {
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: `Bearer ${sesion.access_token}`,
+      "Content-Type": file.type || "application/octet-stream"
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const texto = await res.text();
+    throw new Error(`No se pudo subir la foto "${file.name}": HTTP ${res.status} ${texto}`);
+  }
+  // URL pública (el bucket ya es público)
+  return `${CONFIG.supabaseUrl}/storage/v1/object/public/product-images/${ruta}`;
+}
+
+/* ---- Borrar un archivo del bucket a partir de su URL pública ----
+   Si por algún motivo la foto ya no está en Storage (o la URL no
+   calza con el patrón esperado), no se interrumpe el resto del
+   guardado — solo se avisa por consola, para no bloquear al usuario
+   por un archivo que de todos modos ya no se puede ver en ningún lado. */
+async function eliminarArchivoStorage(url) {
+  const marcador = "/storage/v1/object/public/product-images/";
+  const idx = url.indexOf(marcador);
+  if (idx === -1) { console.warn("URL de foto con formato inesperado, no se borra del bucket:", url); return; }
+  const ruta = url.slice(idx + marcador.length);
+
+  const sesion = await obtenerSesionValida();
+  if (!sesion) throw new Error("Sesión vencida, vuelve a iniciar sesión.");
+
+  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/product-images/${ruta}`, {
+    method: "DELETE",
+    headers: {
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: `Bearer ${sesion.access_token}`
+    }
+  });
+  if (!res.ok) {
+    console.warn(`No se pudo borrar del bucket "${ruta}": HTTP ${res.status}`);
+  }
+}
+
+/* ---- Validaciones (mismas reglas de negocio que pediste) ---- */
+function validarFormulario() {
+  const errores = [];
+  const nombre = document.getElementById("pfNombre").value.trim();
+  const categoriaSel = document.getElementById("pfCategoria").value;
+  const categoriaNueva = document.getElementById("pfCategoriaNueva").value.trim();
+  const precio = Number(document.getElementById("pfPrecio").value);
+  const precioMayorRaw = document.getElementById("pfPrecioMayor").value;
+  const descuentoRaw = document.getElementById("pfDescuento").value;
+
+  if (!nombre) errores.push("Falta el nombre del modelo.");
+  if (categoriaSel === "__nueva__" && !categoriaNueva) errores.push("Escribe el nombre de la nueva categoría.");
+  if (!Number.isFinite(precio) || precio < 0) errores.push("El precio normal debe ser un número mayor o igual a 0.");
+
+  if (precioMayorRaw !== "") {
+    const pm = Number(precioMayorRaw);
+    if (!Number.isFinite(pm) || pm < 0) errores.push("El precio por mayor debe ser un número válido.");
+    else if (Number.isFinite(precio) && pm >= precio) errores.push("El precio por mayor debe ser menor al precio normal.");
+  }
+  if (descuentoRaw !== "") {
+    const d = Number(descuentoRaw);
+    if (!Number.isInteger(d) || d < 1 || d > 99) errores.push("El descuento debe ser un número entero entre 1 y 99.");
+  }
+
+  if (!coloresForm.length) {
+    errores.push("Agrega al menos un color.");
+  } else {
+    coloresForm.forEach((c, i) => {
+      if (!c.name.trim()) errores.push(`El color #${i + 1} necesita un nombre.`);
+      if (!c.fotos.length) errores.push(`El color "${c.name.trim() || "#" + (i + 1)}" necesita al menos una foto.`);
+    });
+  }
+  return errores;
+}
+
+/* ---- Guardar: crea (Parte 3) o actualiza (Parte 4) según modoFormulario ---- */
+document.getElementById("productForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errBoxGeneral = document.getElementById("pfGeneralError");
+  errBoxGeneral.classList.remove("show");
+
+  const errores = validarFormulario();
+  if (errores.length) {
+    errBoxGeneral.textContent = errores.join(" ");
+    errBoxGeneral.classList.add("show");
+    return;
+  }
+
+  const btnGuardar = document.getElementById("btnGuardarProducto");
+  const textoFinalBoton = modoFormulario === "editar" ? "Guardar cambios" : "Guardar producto";
+  btnGuardar.disabled = true;
+  btnGuardar.innerHTML = `<span class="spinner"></span>Guardando…`;
+
+  try {
+    // 1) Resolver categoría (crearla si el usuario escribió una nueva) — igual en ambos modos
+    const categoriaSel = document.getElementById("pfCategoria").value;
+    let categoriaId, categoriaNombre;
+    if (categoriaSel === "__nueva__") {
+      categoriaNombre = document.getElementById("pfCategoriaNueva").value.trim();
+      const creada = await supabaseFetchAuth("categories", {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({ name: categoriaNombre, sort_order: categoriasCache.length })
+      });
+      categoriaId = creada[0].id;
+    } else {
+      categoriaId = Number(categoriaSel);
+      const cat = categoriasCache.find(c => c.id === categoriaId);
+      categoriaNombre = cat ? cat.name : "";
+    }
+
+    const nombre = document.getElementById("pfNombre").value.trim();
+    const precio = Number(document.getElementById("pfPrecio").value);
+    const precioMayorRaw = document.getElementById("pfPrecioMayor").value;
+    const descuentoRaw = document.getElementById("pfDescuento").value;
+    const genero = document.getElementById("pfGenero").value;
+    const descripcion = document.getElementById("pfDescripcion").value.trim();
+
+    let productId;
+
+    if (modoFormulario === "crear") {
+      // 2) Generar el slug (id) único
+      productId = await generarSlugUnico(categoriaNombre, nombre);
+
+      // 3) Insertar el producto
+      await supabaseFetchAuth("products", {
+        method: "POST",
+        body: JSON.stringify({
+          id: productId,
+          name: nombre,
+          category_id: categoriaId,
+          gender: genero || null,
+          description: descripcion || null,
+          price: precio,
+          price_wholesale: precioMayorRaw !== "" ? Number(precioMayorRaw) : null,
+          discount_percent: descuentoRaw !== "" ? Number(descuentoRaw) : null,
+          is_active: true,
+          sort_order: productosCache.length
+        })
+      });
+    } else {
+      // MODO EDITAR: el id nunca cambia
+      productId = productoIdEditando;
+
+      // 2) Actualizar los datos generales del producto (sin tocar id ni is_active)
+      await supabaseFetchAuth(`products?id=eq.${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: nombre,
+          category_id: categoriaId,
+          gender: genero || null,
+          description: descripcion || null,
+          price: precio,
+          price_wholesale: precioMayorRaw !== "" ? Number(precioMayorRaw) : null,
+          discount_percent: descuentoRaw !== "" ? Number(descuentoRaw) : null
+        })
+      });
+
+      // 3) Colores que el usuario quitó: borrar la fila (borra en cascada sus fotos
+      //    en la base de datos) y luego borrar los archivos del bucket, uno por uno.
+      for (const eliminado of coloresEliminados) {
+        await supabaseFetchAuth(`product_colors?id=eq.${eliminado.colorId}`, { method: "DELETE" });
+        for (const url of eliminado.urls) {
+          await eliminarArchivoStorage(url);
+        }
+      }
+
+      // 4) Fotos sueltas que el usuario quitó (de un color que sigue existiendo)
+      for (const foto of fotosEliminadas) {
+        await supabaseFetchAuth(`product_images?id=eq.${foto.imageId}`, { method: "DELETE" });
+        await eliminarArchivoStorage(foto.url);
+      }
+    }
+
+    // 5) Colores que quedan en el formulario, en el orden final (define la portada)
+    for (let i = 0; i < coloresForm.length; i++) {
+      const color = coloresForm[i];
+      btnGuardar.innerHTML = `<span class="spinner"></span>Guardando color ${i + 1}/${coloresForm.length}…`;
+
+      let colorId = color.colorId;
+      if (colorId) {
+        // Color existente: actualizar sus datos y su posición
+        await supabaseFetchAuth(`product_colors?id=eq.${colorId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ name: color.name.trim(), hex: color.hex, stock: color.stock, sort_order: i })
+        });
+      } else {
+        // Color nuevo (agregado durante la edición, o modo crear)
+        const colorCreado = await supabaseFetchAuth("product_colors", {
+          method: "POST",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify({
+            product_id: productId,
+            name: color.name.trim(),
+            hex: color.hex,
+            stock: color.stock,
+            sort_order: i
+          })
+        });
+        colorId = colorCreado[0].id;
+      }
+
+      for (let j = 0; j < color.fotos.length; j++) {
+        const foto = color.fotos[j];
+        if (foto.isExisting) {
+          // Foto que ya existía: solo actualizamos su posición si cambió
+          await supabaseFetchAuth(`product_images?id=eq.${foto.imageId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ sort_order: j })
+          });
+        } else {
+          // Foto nueva: subir al bucket y crear su fila
+          btnGuardar.innerHTML = `<span class="spinner"></span>Subiendo foto ${j + 1}/${color.fotos.length} (color ${i + 1}/${coloresForm.length})…`;
+          const url = await subirFotoAStorage(productId, colorId, foto.file, j);
+          await supabaseFetchAuth("product_images", {
+            method: "POST",
+            body: JSON.stringify({ color_id: colorId, url, sort_order: j })
+          });
+        }
+      }
+    }
+
+    cerrarModalProducto();
+    alert(modoFormulario === "editar"
+      ? `✅ Producto "${nombre}" actualizado correctamente.`
+      : `✅ Producto "${nombre}" creado correctamente.`);
+    await iniciarPanel(); // refresca la lista de la Parte 2, sin recargar la página
+
+  } catch (err) {
+    errBoxGeneral.textContent = "No se pudo guardar: " + err.message;
+    errBoxGeneral.classList.add("show");
+  } finally {
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = textoFinalBoton;
+  }
+});
+
+/* =============================================================
+   ARRANQUE DEL PANEL (una vez logueado)
+   ============================================================= */
+async function iniciarPanel() {
+  const wrap = document.getElementById("productsListWrap");
+  try {
+    productosCache = await traerProductosConDetalle();
+    renderProductos();
+  } catch (err) {
+    wrap.innerHTML = `<div class="placeholder-box">No se pudieron cargar los productos: ${err.message}</div>`;
+  }
+}
+
+/* =============================================================
+   AL CARGAR LA PÁGINA: si ya hay una sesión guardada y válida,
+   entra directo al panel sin pedir login de nuevo.
+   ============================================================= */
+(async function init() {
+  const sesion = await obtenerSesionValida();
+  if (sesion) {
+    mostrarPanel(sesion.email);
+    iniciarPanel();
+  } else {
+    mostrarLogin();
+  }
+})();
+</script>
+</body>
+</html>
