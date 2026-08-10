@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -203,6 +204,60 @@
     .product-actions{ order:4; margin-left:auto; }
   }
 
+  /* ============ SECCIONES (Productos / Portada) ============ */
+  .section-nav{
+    display:flex; gap:6px; padding:10px 24px 0; max-width:1080px; margin:0 auto;
+  }
+  .section-nav button{
+    padding:9px 16px; border-radius:10px 10px 0 0; border:1.5px solid transparent;
+    background:transparent; color:var(--gray); font-size:13.5px; font-weight:700;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .section-nav button.active{
+    background:var(--paper); border-color:var(--line); border-bottom-color:var(--paper);
+    color:var(--ink); position:relative; top:1px;
+  }
+  .app-section{ display:none; }
+  .app-section.active{ display:block; }
+
+  /* ============ PORTADA (banners) ============ */
+  .banner-uploader{
+    border:1.5px dashed var(--line-strong,var(--line)); border-radius:var(--radius);
+    padding:24px; text-align:center; background:var(--paper); margin-bottom:18px;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease;
+  }
+  .banner-uploader:hover{ border-color:var(--red); background:var(--red-soft); }
+  .banner-uploader.dragover{ border-color:var(--red); background:var(--red-soft); }
+  .banner-uploader p{ margin:0; color:var(--gray); font-size:13.5px; }
+  .banner-uploader strong{ color:var(--ink); }
+
+  .banner-row{
+    display:flex; align-items:center; gap:14px;
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:10px 14px; margin-bottom:10px;
+  }
+  .banner-row.inactive{ opacity:0.55; }
+  .banner-row.uploading{ opacity:0.6; }
+  .banner-thumb{
+    width:96px; height:54px; border-radius:8px; overflow:hidden; flex-shrink:0;
+    background:var(--paper-warm); display:flex; align-items:center; justify-content:center;
+  }
+  .banner-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .banner-order{ display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
+  .banner-order button{
+    width:24px; height:20px; font-size:10px; border:1.5px solid var(--line); background:var(--paper);
+    border-radius:5px; cursor:pointer; padding:0; line-height:1;
+  }
+  .banner-order button:disabled{ opacity:0.3; cursor:not-allowed; }
+  .banner-info{ flex:1; min-width:0; }
+  .banner-info .link{ font-size:12px; color:var(--gray); word-break:break-all; }
+  .banner-info .link.empty{ color:var(--gray-light); font-style:italic; }
+  .banner-actions{ display:flex; gap:8px; flex-shrink:0; }
+  @media(max-width:640px){
+    .banner-row{ flex-wrap:wrap; }
+    .banner-actions{ order:4; margin-left:auto; }
+  }
+
   /* ============ MODAL: FORMULARIO DE PRODUCTO (Parte 3) ============ */
   .modal-overlay{
     position:fixed; inset:0; z-index:200;
@@ -363,27 +418,56 @@
     </div>
   </div>
 
+  <nav class="section-nav" id="sectionNav">
+    <button type="button" class="active" data-section="productos">Productos</button>
+    <button type="button" data-section="portada">Portada</button>
+  </nav>
+
   <main class="content">
-    <div class="content-header">
-      <div>
-        <h2>Productos</h2>
-        <p class="lead">Acá vas a poder ver, crear y editar los modelos del catálogo.</p>
-      </div>
-      <button class="btn btn-primary btn-new" id="btnNuevoProducto">+ Nuevo producto</button>
-    </div>
 
-    <div class="list-toolbar">
-      <div class="tabs" id="statusTabs">
-        <button class="tab active" data-filter="todos">Todos</button>
-        <button class="tab" data-filter="activos">Activos</button>
-        <button class="tab" data-filter="inactivos">Inactivos</button>
+    <!-- ============================= SECCIÓN: PRODUCTOS ============================= -->
+    <section class="app-section active" id="sectionProductos">
+      <div class="content-header">
+        <div>
+          <h2>Productos</h2>
+          <p class="lead">Acá vas a poder ver, crear y editar los modelos del catálogo.</p>
+        </div>
+        <button class="btn btn-primary btn-new" id="btnNuevoProducto">+ Nuevo producto</button>
       </div>
-      <span class="count-label" id="countLabel"></span>
-    </div>
 
-    <div id="productsListWrap">
-      <div class="placeholder-box" id="productsPlaceholder">Cargando productos…</div>
-    </div>
+      <div class="list-toolbar">
+        <div class="tabs" id="statusTabs">
+          <button class="tab active" data-filter="todos">Todos</button>
+          <button class="tab" data-filter="activos">Activos</button>
+          <button class="tab" data-filter="inactivos">Inactivos</button>
+        </div>
+        <span class="count-label" id="countLabel"></span>
+      </div>
+
+      <div id="productsListWrap">
+        <div class="placeholder-box" id="productsPlaceholder">Cargando productos…</div>
+      </div>
+    </section>
+
+    <!-- ============================= SECCIÓN: PORTADA (banners) ============================= -->
+    <section class="app-section" id="sectionPortada">
+      <div class="content-header">
+        <div>
+          <h2>Portada</h2>
+          <p class="lead">Las fotos que ves acá son el carrusel que aparece arriba del todo en el catálogo. El orden de la lista es el orden en que se muestran.</p>
+        </div>
+      </div>
+
+      <label class="banner-uploader" id="bannerUploader" for="bannerFileInput">
+        <p><strong>Toca para elegir foto(s)</strong> o arrástralas aquí — se suben apenas las eliges.</p>
+        <input type="file" id="bannerFileInput" accept="image/*" multiple style="display:none;">
+      </label>
+
+      <div id="bannersListWrap">
+        <div class="placeholder-box" id="bannersPlaceholder">Cargando fotos de portada…</div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -716,6 +800,232 @@ async function alternarActivo(id, estaActivoAhora) {
     if (btn) { btn.disabled = false; btn.textContent = estaActivoAhora ? "Desactivar" : "Activar"; }
   }
 }
+
+/* =============================================================
+   NAVEGACIÓN ENTRE SECCIONES (Productos / Portada)
+   ============================================================= */
+document.getElementById("sectionNav").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-section]");
+  if (!btn) return;
+  document.querySelectorAll("#sectionNav button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".app-section").forEach(s => s.classList.remove("active"));
+  document.getElementById(
+    btn.dataset.section === "portada" ? "sectionPortada" : "sectionProductos"
+  ).classList.add("active");
+});
+
+/* =============================================================
+   PORTADA — banners del carrusel de index.html
+   Tabla: banners (id, image_url, link_url, sort_order, is_active)
+   Bucket de Storage: "banners" (público)
+   ============================================================= */
+let bannersCache = [];
+
+async function traerBanners() {
+  return supabaseFetchAuth("banners?select=id,image_url,link_url,sort_order,is_active&order=sort_order.asc");
+}
+
+function renderBanners() {
+  const wrap = document.getElementById("bannersListWrap");
+
+  if (!bannersCache.length) {
+    wrap.innerHTML = `<div class="placeholder-box">Todavía no agregaste ninguna foto de portada. Usa el botón de arriba para subir la primera.</div>`;
+    return;
+  }
+
+  const lista = [...bannersCache].sort((a, b) => a.sort_order - b.sort_order);
+
+  wrap.innerHTML = lista.map((b, idx) => `
+    <div class="banner-row${b.is_active ? "" : " inactive"}" data-id="${b.id}">
+      <div class="banner-order">
+        <button type="button" class="btn-banner-up" data-id="${b.id}" ${idx === 0 ? "disabled" : ""} title="Subir">▲</button>
+        <button type="button" class="btn-banner-down" data-id="${b.id}" ${idx === lista.length - 1 ? "disabled" : ""} title="Bajar">▼</button>
+      </div>
+      <div class="banner-thumb"><img src="${b.image_url}" alt="Foto de portada ${idx + 1}"></div>
+      <div class="banner-info">
+        <input
+          type="text"
+          class="link-input"
+          data-id="${b.id}"
+          placeholder="Link opcional al tocar la foto (https://...)"
+          value="${b.link_url ? b.link_url.replace(/"/g, "&quot;") : ""}"
+          style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);font-size:12.5px;">
+      </div>
+      <div class="banner-actions">
+        <button class="btn-sm btn-banner-toggle" data-id="${b.id}" data-active="${b.is_active}">
+          ${b.is_active ? "Desactivar" : "Activar"}
+        </button>
+        <button class="btn-sm btn-banner-borrar" data-id="${b.id}">Borrar</button>
+      </div>
+    </div>`).join("");
+
+  wrap.querySelectorAll(".btn-banner-up").forEach(btn =>
+    btn.addEventListener("click", () => moverBanner(btn.dataset.id, -1)));
+  wrap.querySelectorAll(".btn-banner-down").forEach(btn =>
+    btn.addEventListener("click", () => moverBanner(btn.dataset.id, 1)));
+  wrap.querySelectorAll(".btn-banner-toggle").forEach(btn =>
+    btn.addEventListener("click", () => alternarActivoBanner(btn.dataset.id, btn.dataset.active === "true")));
+  wrap.querySelectorAll(".btn-banner-borrar").forEach(btn =>
+    btn.addEventListener("click", () => borrarBanner(btn.dataset.id)));
+  wrap.querySelectorAll(".link-input").forEach(input => {
+    input.addEventListener("change", () => guardarLinkBanner(input.dataset.id, input.value.trim()));
+  });
+}
+
+async function guardarLinkBanner(id, link) {
+  try {
+    await supabaseFetchAuth(`banners?id=eq.${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ link_url: link || null })
+    });
+    const b = bannersCache.find(x => x.id === id);
+    if (b) b.link_url = link || null;
+  } catch (err) {
+    alert("No se pudo guardar el link: " + err.message);
+  }
+}
+
+async function alternarActivoBanner(id, estaActivoAhora) {
+  try {
+    await supabaseFetchAuth(`banners?id=eq.${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: !estaActivoAhora })
+    });
+    const b = bannersCache.find(x => x.id === id);
+    if (b) b.is_active = !estaActivoAhora;
+    renderBanners();
+  } catch (err) {
+    alert("No se pudo actualizar: " + err.message);
+  }
+}
+
+/* Intercambia el sort_order con el vecino de arriba/abajo (delta -1 o +1) */
+async function moverBanner(id, delta) {
+  const lista = [...bannersCache].sort((a, b) => a.sort_order - b.sort_order);
+  const i = lista.findIndex(b => b.id === id);
+  const j = i + delta;
+  if (i === -1 || j < 0 || j >= lista.length) return;
+
+  const a = lista[i], c = lista[j];
+  const ordenA = a.sort_order, ordenC = c.sort_order;
+
+  try {
+    await Promise.all([
+      supabaseFetchAuth(`banners?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenC }) }),
+      supabaseFetchAuth(`banners?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenA }) })
+    ]);
+    a.sort_order = ordenC;
+    c.sort_order = ordenA;
+    renderBanners();
+  } catch (err) {
+    alert("No se pudo reordenar: " + err.message);
+  }
+}
+
+async function borrarBanner(id) {
+  const b = bannersCache.find(x => x.id === id);
+  if (!b) return;
+  if (!confirm("¿Borrar esta foto de portada? No se puede deshacer.")) return;
+
+  const fila = document.querySelector(`.banner-row[data-id="${id}"]`);
+  if (fila) fila.style.opacity = "0.4";
+
+  try {
+    await supabaseFetchAuth(`banners?id=eq.${id}`, { method: "DELETE" });
+    await eliminarArchivoStorageBucket(b.image_url, "banners");
+    bannersCache = bannersCache.filter(x => x.id !== id);
+    renderBanners();
+  } catch (err) {
+    alert("No se pudo borrar: " + err.message);
+    if (fila) fila.style.opacity = "1";
+  }
+}
+
+/* ---- Subida de fotos de portada al bucket "banners" ---- */
+async function subirBannerAStorage(file) {
+  const sesion = await obtenerSesionValida();
+  if (!sesion) throw new Error("Sesión vencida, vuelve a iniciar sesión.");
+
+  const nombreArchivo = `${Date.now()}-${sanitizarNombreArchivo(file.name)}`;
+
+  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/banners/${nombreArchivo}`, {
+    method: "POST",
+    headers: {
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: `Bearer ${sesion.access_token}`,
+      "Content-Type": file.type || "application/octet-stream"
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const texto = await res.text();
+    throw new Error(`No se pudo subir "${file.name}": HTTP ${res.status} ${texto}`);
+  }
+  return `${CONFIG.supabaseUrl}/storage/v1/object/public/banners/${nombreArchivo}`;
+}
+
+/* Versión genérica de eliminarArchivoStorage que acepta el nombre del bucket
+   (la de productos está fijada al bucket "product-images"). */
+async function eliminarArchivoStorageBucket(url, bucket) {
+  const marcador = `/storage/v1/object/public/${bucket}/`;
+  const idx = url.indexOf(marcador);
+  if (idx === -1) { console.warn("URL de foto con formato inesperado, no se borra del bucket:", url); return; }
+  const ruta = url.slice(idx + marcador.length);
+
+  const sesion = await obtenerSesionValida();
+  if (!sesion) throw new Error("Sesión vencida, vuelve a iniciar sesión.");
+
+  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/${bucket}/${ruta}`, {
+    method: "DELETE",
+    headers: { apikey: CONFIG.supabaseAnonKey, Authorization: `Bearer ${sesion.access_token}` }
+  });
+  if (!res.ok) console.warn(`No se pudo borrar del bucket "${ruta}": HTTP ${res.status}`);
+}
+
+async function manejarNuevasFotosPortada(files) {
+  const lista = Array.from(files || []);
+  if (!lista.length) return;
+
+  const siguienteOrden = bannersCache.length
+    ? Math.max(...bannersCache.map(b => b.sort_order)) + 1
+    : 0;
+
+  for (let i = 0; i < lista.length; i++) {
+    const file = lista[i];
+    try {
+      const url = await subirBannerAStorage(file);
+      const creado = await supabaseFetchAuth("banners", {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({
+          image_url: url,
+          link_url: null,
+          sort_order: siguienteOrden + i,
+          is_active: true
+        })
+      });
+      bannersCache.push(creado[0]);
+      renderBanners();
+    } catch (err) {
+      alert(`No se pudo subir "${file.name}": ` + err.message);
+    }
+  }
+}
+
+const bannerFileInput = document.getElementById("bannerFileInput");
+const bannerUploader = document.getElementById("bannerUploader");
+bannerFileInput.addEventListener("change", () => {
+  manejarNuevasFotosPortada(bannerFileInput.files);
+  bannerFileInput.value = "";
+});
+["dragover", "dragenter"].forEach(evt =>
+  bannerUploader.addEventListener(evt, e => { e.preventDefault(); bannerUploader.classList.add("dragover"); }));
+["dragleave", "drop"].forEach(evt =>
+  bannerUploader.addEventListener(evt, e => { e.preventDefault(); bannerUploader.classList.remove("dragover"); }));
+bannerUploader.addEventListener("drop", e => {
+  if (e.dataTransfer && e.dataTransfer.files) manejarNuevasFotosPortada(e.dataTransfer.files);
+});
 
 document.getElementById("statusTabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
@@ -1326,6 +1636,14 @@ async function iniciarPanel() {
     renderProductos();
   } catch (err) {
     wrap.innerHTML = `<div class="placeholder-box">No se pudieron cargar los productos: ${err.message}</div>`;
+  }
+
+  const wrapBanners = document.getElementById("bannersListWrap");
+  try {
+    bannersCache = await traerBanners();
+    renderBanners();
+  } catch (err) {
+    wrapBanners.innerHTML = `<div class="placeholder-box">No se pudieron cargar las fotos de portada: ${err.message}</div>`;
   }
 }
 
