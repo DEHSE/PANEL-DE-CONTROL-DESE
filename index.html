@@ -815,8 +815,8 @@ document.getElementById("sectionNav").addEventListener("click", (e) => {
 });
 
 /* =============================================================
-   PORTADA — banners del carrusel de index.html
-   Tabla: banners (id, image_url, link_url, sort_order, is_active)
+   PORTADA — fotos del carrusel de index.html
+   Tabla: portada (id, image_url, link_url, sort_order, is_active)
    Bucket de Storage: "portada" (público)
    ============================================================= */
 let bannersCache = [];
@@ -874,7 +874,7 @@ function renderBanners() {
 
 async function guardarLinkBanner(id, link) {
   try {
-    await supabaseFetchAuth(`banners?id=eq.${id}`, {
+    await supabaseFetchAuth(`portada?id=eq.${id}`, {
       method: "PATCH",
       body: JSON.stringify({ link_url: link || null })
     });
@@ -887,7 +887,7 @@ async function guardarLinkBanner(id, link) {
 
 async function alternarActivoBanner(id, estaActivoAhora) {
   try {
-    await supabaseFetchAuth(`banners?id=eq.${id}`, {
+    await supabaseFetchAuth(`portada?id=eq.${id}`, {
       method: "PATCH",
       body: JSON.stringify({ is_active: !estaActivoAhora })
     });
@@ -911,8 +911,8 @@ async function moverBanner(id, delta) {
 
   try {
     await Promise.all([
-      supabaseFetchAuth(`banners?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenC }) }),
-      supabaseFetchAuth(`banners?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenA }) })
+      supabaseFetchAuth(`portada?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenC }) }),
+      supabaseFetchAuth(`portada?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify({ sort_order: ordenA }) })
     ]);
     a.sort_order = ordenC;
     c.sort_order = ordenA;
@@ -931,7 +931,7 @@ async function borrarBanner(id) {
   if (fila) fila.style.opacity = "0.4";
 
   try {
-    await supabaseFetchAuth(`banners?id=eq.${id}`, { method: "DELETE" });
+    await supabaseFetchAuth(`portada?id=eq.${id}`, { method: "DELETE" });
     await eliminarArchivoStorageBucket(b.image_url, "portada");
     bannersCache = bannersCache.filter(x => x.id !== id);
     renderBanners();
