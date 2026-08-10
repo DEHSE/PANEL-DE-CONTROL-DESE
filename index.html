@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -818,12 +817,12 @@ document.getElementById("sectionNav").addEventListener("click", (e) => {
 /* =============================================================
    PORTADA — banners del carrusel de index.html
    Tabla: banners (id, image_url, link_url, sort_order, is_active)
-   Bucket de Storage: "banners" (público)
+   Bucket de Storage: "portada" (público)
    ============================================================= */
 let bannersCache = [];
 
 async function traerBanners() {
-  return supabaseFetchAuth("banners?select=id,image_url,link_url,sort_order,is_active&order=sort_order.asc");
+  return supabaseFetchAuth("portada?select=id,image_url,link_url,sort_order,is_active&order=sort_order.asc");
 }
 
 function renderBanners() {
@@ -933,7 +932,7 @@ async function borrarBanner(id) {
 
   try {
     await supabaseFetchAuth(`banners?id=eq.${id}`, { method: "DELETE" });
-    await eliminarArchivoStorageBucket(b.image_url, "banners");
+    await eliminarArchivoStorageBucket(b.image_url, "portada");
     bannersCache = bannersCache.filter(x => x.id !== id);
     renderBanners();
   } catch (err) {
@@ -942,14 +941,14 @@ async function borrarBanner(id) {
   }
 }
 
-/* ---- Subida de fotos de portada al bucket "banners" ---- */
+/* ---- Subida de fotos de portada al bucket "portada" ---- */
 async function subirBannerAStorage(file) {
   const sesion = await obtenerSesionValida();
   if (!sesion) throw new Error("Sesión vencida, vuelve a iniciar sesión.");
 
   const nombreArchivo = `${Date.now()}-${sanitizarNombreArchivo(file.name)}`;
 
-  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/banners/${nombreArchivo}`, {
+  const res = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/portada/${nombreArchivo}`, {
     method: "POST",
     headers: {
       apikey: CONFIG.supabaseAnonKey,
@@ -962,7 +961,7 @@ async function subirBannerAStorage(file) {
     const texto = await res.text();
     throw new Error(`No se pudo subir "${file.name}": HTTP ${res.status} ${texto}`);
   }
-  return `${CONFIG.supabaseUrl}/storage/v1/object/public/banners/${nombreArchivo}`;
+  return `${CONFIG.supabaseUrl}/storage/v1/object/public/portada/${nombreArchivo}`;
 }
 
 /* Versión genérica de eliminarArchivoStorage que acepta el nombre del bucket
@@ -995,7 +994,7 @@ async function manejarNuevasFotosPortada(files) {
     const file = lista[i];
     try {
       const url = await subirBannerAStorage(file);
-      const creado = await supabaseFetchAuth("banners", {
+      const creado = await supabaseFetchAuth("portada", {
         method: "POST",
         headers: { Prefer: "return=representation" },
         body: JSON.stringify({
