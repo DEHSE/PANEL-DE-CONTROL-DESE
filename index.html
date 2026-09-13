@@ -298,6 +298,31 @@
   }
   .field-error-inline.show{ display:block; }
 
+  /* ============ TOAST (aviso flotante, siempre visible aunque haya scroll) ============ */
+  .toast-stack{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%);
+    z-index:999; display:flex; flex-direction:column; gap:8px;
+    width:100%; max-width:420px; padding:0 16px; pointer-events:none;
+  }
+  .toast{
+    pointer-events:auto;
+    display:flex; align-items:flex-start; gap:10px;
+    padding:13px 14px; border-radius:var(--radius-sm);
+    font-size:13.5px; font-weight:600; line-height:1.45;
+    box-shadow:var(--shadow);
+    opacity:0; transform:translateY(-14px); transition:opacity .2s ease, transform .2s ease;
+    border:1.5px solid transparent;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+  .toast-success{ background:var(--ok-soft); color:#0F5A38; border-color:#BFE8D4; }
+  .toast-error{ background:var(--red-soft); color:var(--red-deep); border-color:#F6C6C4; }
+  .toast-info{ background:var(--paper); color:var(--ink-soft); border-color:var(--line); }
+  .toast-close{
+    margin-left:auto; background:none; border:none; cursor:pointer;
+    font-size:15px; line-height:1; color:inherit; opacity:0.6; padding:0 0 0 8px; flex-shrink:0;
+  }
+  .toast-close:hover{ opacity:1; }
+
   .colors-label-row{
     display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
   }
@@ -471,6 +496,8 @@
 </div>
 
 <!-- ============================= MODAL: NUEVO PRODUCTO (Parte 3) ============================= -->
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
 <div class="modal-overlay" id="productModalOverlay">
   <div class="modal-box">
     <button type="button" class="modal-close-x" id="productModalClose" aria-label="Cerrar">✕</button>
@@ -550,6 +577,36 @@ const CONFIG = {
 };
 
 const SESSION_KEY = "dehse_admin_session";
+
+/* =============================================================
+   TOAST — aviso flotante fijo arriba de la pantalla.
+   A diferencia de los mensajes de error dentro del formulario
+   (que pueden quedar fuera de vista si el usuario está scrolleado
+   abajo), esto SIEMPRE se ve, sin importar en qué parte del
+   modal/página esté el usuario. Se usa para confirmar éxitos,
+   errores y también el progreso de subida de cada foto.
+   ============================================================= */
+function mostrarToast(mensaje, tipo = "info", duracionMs = 5000) {
+  const stack = document.getElementById("toastStack");
+  const el = document.createElement("div");
+  el.className = `toast toast-${tipo}`;
+  el.innerHTML = `<span>${mensaje}</span><button type="button" class="toast-close" aria-label="Cerrar aviso">✕</button>`;
+  stack.appendChild(el);
+
+  // Forzar reflow para que la transición de entrada se vea
+  requestAnimationFrame(() => el.classList.add("show"));
+
+  let cerrado = false;
+  const cerrar = () => {
+    if (cerrado) return;
+    cerrado = true;
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 220);
+  };
+  el.querySelector(".toast-close").addEventListener("click", cerrar);
+  if (duracionMs) setTimeout(cerrar, duracionMs);
+  return { cerrar };
+}
 
 /* =============================================================
    SESIÓN — guardamos el token de Supabase Auth en localStorage
@@ -1473,6 +1530,8 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
   if (errores.length) {
     errBoxGeneral.textContent = errores.join(" ");
     errBoxGeneral.classList.add("show");
+    errBoxGeneral.scrollIntoView({ behavior: "smooth", block: "center" });
+    mostrarToast("⚠️ " + errores.join(" "), "error", 8000);
     return;
   }
 
@@ -1611,14 +1670,19 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     }
 
     cerrarModalProducto();
-    alert(modoFormulario === "editar"
-      ? `✅ Producto "${nombre}" actualizado correctamente.`
-      : `✅ Producto "${nombre}" creado correctamente.`);
+    mostrarToast(
+      modoFormulario === "editar"
+        ? `✅ Producto "${nombre}" actualizado correctamente.`
+        : `✅ Producto "${nombre}" creado correctamente.`,
+      "success"
+    );
     await iniciarPanel(); // refresca la lista de la Parte 2, sin recargar la página
 
   } catch (err) {
     errBoxGeneral.textContent = "No se pudo guardar: " + err.message;
     errBoxGeneral.classList.add("show");
+    errBoxGeneral.scrollIntoView({ behavior: "smooth", block: "center" });
+    mostrarToast("❌ No se pudo guardar: " + err.message, "error", 9000);
   } finally {
     btnGuardar.disabled = false;
     btnGuardar.textContent = textoFinalBoton;
