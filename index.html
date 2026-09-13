@@ -334,6 +334,10 @@
   .color-card{
     border:1.5px solid var(--line); border-radius:var(--radius-sm);
     padding:16px; margin-bottom:14px; background:var(--paper-warm);
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .color-card.has-error{
+    border-color:var(--red); box-shadow:0 0 0 3px var(--red-soft);
   }
   .color-card-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
   .color-badge-portada{
@@ -1162,7 +1166,7 @@ function renderColores() {
   }
 
   wrap.innerHTML = coloresForm.map((color, i) => `
-    <div class="color-card">
+    <div class="color-card" data-color-card="${color.tempId}">
       <div class="color-card-head">
         <div class="color-order-btns">
           <button type="button" class="btn-color-up" data-tid="${color.tempId}" ${i === 0 ? "disabled" : ""} title="Subir">▲</button>
@@ -1259,8 +1263,7 @@ function renderColores() {
       inp.value = ""; // permite volver a elegir el mismo archivo si se quita y se agrega otra vez
       renderColores();
     });
-  });
-  wrap.querySelectorAll(".photo-remove").forEach(btn => {
+  });  wrap.querySelectorAll(".photo-remove").forEach(btn => {
     btn.addEventListener("click", () => {
       const c = coloresForm.find(x => x.tempId === btn.dataset.tid);
       if (!c) return;
@@ -1509,15 +1512,34 @@ function validarFormulario() {
     if (!Number.isInteger(d) || d < 1 || d > 99) errores.push("El descuento debe ser un número entero entre 1 y 99.");
   }
 
+  const tempIdsConError = [];
   if (!coloresForm.length) {
     errores.push("Agrega al menos un color.");
   } else {
     coloresForm.forEach((c, i) => {
-      if (!c.name.trim()) errores.push(`El color #${i + 1} necesita un nombre.`);
-      if (!c.fotos.length) errores.push(`El color "${c.name.trim() || "#" + (i + 1)}" necesita al menos una foto.`);
+      if (!c.name.trim()) { errores.push(`El color #${i + 1} necesita un nombre.`); tempIdsConError.push(c.tempId); }
+      if (!c.fotos.length) { errores.push(`El color "${c.name.trim() || "#" + (i + 1)}" necesita al menos una foto.`); tempIdsConError.push(c.tempId); }
     });
   }
-  return errores;
+  return { errores, tempIdsConError };
+}
+
+/* Resalta con borde rojo las tarjetas de color con error y hace scroll
+   hasta la primera de ellas, para que sea imposible no darse cuenta
+   cuál color específico falta completar (antes solo se mencionaba
+   el nombre en un mensaje de texto, fácil de pasar por alto si hay
+   varios colores en la lista). */
+function resaltarColoresConError(tempIds) {
+  document.querySelectorAll(".color-card.has-error").forEach(el => el.classList.remove("has-error"));
+  let primera = null;
+  tempIds.forEach(tid => {
+    const card = document.querySelector(`[data-color-card="${tid}"]`);
+    if (card) {
+      card.classList.add("has-error");
+      if (!primera) primera = card;
+    }
+  });
+  if (primera) primera.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 /* ---- Guardar: crea (Parte 3) o actualiza (Parte 4) según modoFormulario ---- */
@@ -1526,12 +1548,18 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
   const errBoxGeneral = document.getElementById("pfGeneralError");
   errBoxGeneral.classList.remove("show");
 
-  const errores = validarFormulario();
+  document.querySelectorAll(".color-card.has-error").forEach(el => el.classList.remove("has-error"));
+
+  const { errores, tempIdsConError } = validarFormulario();
   if (errores.length) {
     errBoxGeneral.textContent = errores.join(" ");
     errBoxGeneral.classList.add("show");
-    errBoxGeneral.scrollIntoView({ behavior: "smooth", block: "center" });
     mostrarToast("⚠️ " + errores.join(" "), "error", 8000);
+    if (tempIdsConError.length) {
+      resaltarColoresConError(tempIdsConError);
+    } else {
+      errBoxGeneral.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     return;
   }
 
